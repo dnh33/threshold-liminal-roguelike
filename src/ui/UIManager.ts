@@ -7,6 +7,7 @@ import { PauseMenu } from './PauseMenu';
 import { RunEndScreen } from './RunEndScreen';
 import type { RunEndStats, ArtifactEntry } from './RunEndScreen';
 import { Codex } from './Codex';
+import { SettingsScreen } from './SettingsScreen';
 
 export const UIState = {
   MAIN_MENU: 'main_menu',
@@ -65,6 +66,7 @@ export class UIManager extends EventEmitter {
   private pauseMenu: PauseMenu;
   private runEndScreen: RunEndScreen;
   private codex: Codex;
+  private settingsScreen!: SettingsScreen;
   private container: HTMLElement;
   private loadingEl: HTMLElement;
 
@@ -105,6 +107,11 @@ export class UIManager extends EventEmitter {
 
     this.codex = new Codex(this.container);
     this.setupCodexEvents();
+
+    this.settingsScreen = new SettingsScreen(this.container, _engine.settings);
+    this.settingsScreen.on('setting_changed', (data: any) => {
+      this.emit('setting_changed', data);
+    });
 
     // Default state
     this.setState(UIState.MAIN_MENU);
@@ -203,6 +210,7 @@ export class UIManager extends EventEmitter {
     this.pauseMenu.hide();
     this.runEndScreen.hide();
     this.codex.hide();
+    this.settingsScreen.hide();
     this.loadingEl.classList.add('hidden');
 
     // Show relevant
@@ -226,7 +234,7 @@ export class UIManager extends EventEmitter {
         });
         break;
       case UIState.SETTINGS:
-        this.pauseMenu.show();
+        this.settingsScreen.show();
         break;
       case UIState.LOADING:
         this.loadingEl.classList.remove('hidden');
@@ -256,12 +264,14 @@ export class UIManager extends EventEmitter {
   }
 
   showTooltip(text: string, duration: number): void {
-    this.hud.showNotification(text, 'info');
-    if (duration > 0) {
-      setTimeout(() => {
-        // Notifications auto-dismiss
-      }, duration);
-    }
+    const tooltip = document.createElement('div');
+    tooltip.textContent = text;
+    tooltip.style.cssText = 'position:fixed;bottom:50%;left:50%;transform:translate(-50%,-50%);background:#000000cc;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:1000;pointer-events:none;font-family:system-ui,sans-serif;transition:opacity 0.3s;';
+    document.body.appendChild(tooltip);
+    setTimeout(() => {
+      tooltip.style.opacity = '0';
+      setTimeout(() => tooltip.remove(), 300);
+    }, duration);
   }
 
   updateRunStats(_stats: Partial<RunEndStats>): void {
@@ -273,7 +283,7 @@ export class UIManager extends EventEmitter {
   }
 
   showAnomalyNotification(text: string): void {
-    this.hud.setAnomalyWarning(text);
+    this.showNotification(text, 'warning');
   }
 
   showRunEndScreen(result: string, stats: RunEndStats, artifacts?: ArtifactEntry[]): void {
@@ -323,6 +333,7 @@ export class UIManager extends EventEmitter {
     this.pauseMenu.dispose();
     this.runEndScreen.dispose();
     this.codex.dispose();
+    this.settingsScreen.dispose();
     this.loadingEl.remove();
     this.container.remove();
     this.removeAllListeners();

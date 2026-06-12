@@ -5,19 +5,28 @@ import type { InputManager } from '../core/InputManager';
 
 const STANDING_HEIGHT = 1.7;
 const CROUCHING_HEIGHT = 0.8;
-const WALK_SPEED = 4;
-const SPRINT_SPEED = 6;
-const CROUCH_SPEED = 1.5;
-const GRAVITY = -9.81;
-const JUMP_FORCE = 5;
+const WALK_SPEED = 4.5;
+const SPRINT_SPEED = 7;
+const CROUCH_SPEED = 2;
+const GRAVITY = -12;
+const JUMP_FORCE = 6;
 const MOUSE_SENSITIVITY = 0.002;
 const CROUCH_LERP_SPEED = 12;
 const HEAD_BOB_FREQUENCY = 10;
-const HEAD_BOB_AMPLITUDE_WALK = 0.04;
-const HEAD_BOB_AMPLITUDE_SPRINT = 0.06;
+const HEAD_BOB_AMPLITUDE_WALK = 0.03;
+const HEAD_BOB_AMPLITUDE_SPRINT = 0.05;
+const STAMINA_MAX = 10;
+const STAMINA_DRAIN = 18;
+const STAMINA_REGEN = 6;
 const FOOTSTEP_INTERVAL_WALK = 0.5;
 const FOOTSTEP_INTERVAL_SPRINT = 0.35;
 const FOOTSTEP_INTERVAL_CROUCH = 0.75;
+const MAX_HEALTH = 100;
+const MAX_SANITY = 100;
+const SANITY_DRAIN_RATE = 2; // per second in biomes
+const SANITY_REGEN_RATE = 5; // per second in transition zones
+const NATURAL_HEAL_DELAY = 10; // seconds before natural regen starts
+const NATURAL_HEAL_RATE = 1; // HP per 10 seconds
 
 const PlayerState = {
   IDLE: 'idle',
@@ -47,6 +56,14 @@ export class PlayerController extends EventEmitter {
   public isGrounded = true;
   public isCrouching = false;
   public isSprinting = false;
+  public health: number = MAX_HEALTH;
+  public sanity: number = MAX_SANITY;
+  public maxHealth: number = MAX_HEALTH;
+  public maxSanity: number = MAX_SANITY;
+  private _detectionLevel: number = 0;
+  private _lastDamageTime: number = 0;
+  private _stamina: number = STAMINA_MAX;
+  private _inTransitionZone: boolean = false;
 
   private _enabled = true;
   private engine: Engine;
@@ -158,6 +175,19 @@ export class PlayerController extends EventEmitter {
     this._handleHeadBob(dt);
     this._handleFootsteps(dt);
     this._updateInteractionRay();
+
+    // Natural heal after delay
+    if (this.health < this.maxHealth && (this.engine.time.elapsedTime - this._lastDamageTime) > NATURAL_HEAL_DELAY) {
+      this.health = Math.min(this.maxHealth, this.health + NATURAL_HEAL_RATE * dt);
+    }
+
+    // Sanity management
+    if (this._inTransitionZone) {
+      this.sanity = Math.min(this.maxSanity, this.sanity + SANITY_REGEN_RATE * dt);
+    } else {
+      this.sanity = Math.max(0, this.sanity - SANITY_DRAIN_RATE * dt);
+    }
+
     this._checkGround();
   }
 
@@ -182,6 +212,14 @@ export class PlayerController extends EventEmitter {
       this.input.isKeyDown('a') || this.input.isKeyDown('d');
 
     this.isSprinting = this.input.isKeyDown('shift') && isMoving && !this.isCrouching && this.isGrounded;
+
+    // Stamina
+    if (this.isSprinting) {
+      this._stamina = Math.max(0, this._stamina - STAMINA_DRAIN * _dt);
+      if (this._stamina <= 0) this.isSprinting = false;
+    } else {
+      this._stamina = Math.min(STAMINA_MAX, this._stamina + STAMINA_REGEN * _dt);
+    }
 
     if (this.input.isKeyDown('w')) this._moveDir.z -= 1;
     if (this.input.isKeyDown('s')) this._moveDir.z += 1;
@@ -390,6 +428,33 @@ export class PlayerController extends EventEmitter {
     this._yaw = Math.atan2(direction.x, direction.z);
     this._pitch = -Math.asin(direction.y / direction.length());
     this._pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this._pitch));
+  }
+
+  takeDamage(amount: number): void {
+    this.health = Math.max(0, this.health - amount);
+    this._lastDamageTime = this.engine.time.elapsedTime;
+    this.emit('damage-taken', { amount, health: this.health, maxHealth: this.maxHealth });
+    if (this.health <= 0) {
+      this.emit('death');
+    }
+  }
+
+  heal(amount: number): void {
+    this.health = Math.min(this.maxHealth, this.health + amount);
+  }
+
+  getHealth(): number { return this.health; }
+  getMaxHealth(): number { return this.maxHealth; }
+  getSanity(): number { return this.sanity; }
+  getDetectionLevel(): number { return this._detectionLevel; }
+  setDetectionLevel(level: number): void { this._detectionLevel = Math.max(0, Math.min(1, level)); }
+
+  setInTransitionZone(inZone: boolean): void {
+    this._inTransitionZone = inZone;
+  }
+
+  findBiomeExit(): void {
+    this.emit('biome_exit_found');
   }
 
   dispose(): void {

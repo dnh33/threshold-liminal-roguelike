@@ -47,7 +47,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Echoing Halls',
     description: 'Corridors loop back on themselves, spatial geometry distorts',
     baseSeverity: 0.4,
-    baseDuration: 120,
+    baseDuration: 90,
     permanent: false,
     biomeAffinity: [BiomeType.CUBICLE_SEA, BiomeType.ATRIUM_MALL, BiomeType.SERVER_CATHEDRAL],
     generateEffects: (severity) => [
@@ -60,7 +60,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Flicker',
     description: 'Power failures plunge sections into darkness, lights strobe unpredictably',
     baseSeverity: 0.3,
-    baseDuration: 90,
+    baseDuration: 60,
     permanent: false,
     biomeAffinity: [BiomeType.CUBICLE_SEA, BiomeType.SUBMERGED_GARAGE, BiomeType.SERVER_CATHEDRAL],
     generateEffects: (severity) => [
@@ -73,7 +73,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Thermal Inversion',
     description: 'Extreme heat and cold pockets create hazardous zones, thick fog rolls in',
     baseSeverity: 0.4,
-    baseDuration: 150,
+    baseDuration: 75,
     permanent: false,
     biomeAffinity: [BiomeType.SUBMERGED_GARAGE, BiomeType.SERVER_CATHEDRAL, BiomeType.STAIRWELL_INFINITE],
     generateEffects: (severity) => [
@@ -99,7 +99,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Gravity Well',
     description: 'Localized gravity anomalies alter movement and physics',
     baseSeverity: 0.5,
-    baseDuration: 100,
+    baseDuration: 45,
     permanent: false,
     biomeAffinity: [BiomeType.STAIRWELL_INFINITE, BiomeType.POOL_COMPLEX, BiomeType.SUBMERGED_GARAGE],
     generateEffects: (severity) => [
@@ -112,7 +112,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Temporal Loop',
     description: 'Rooms and sequences repeat, creating deja vu and disorientation',
     baseSeverity: 0.5,
-    baseDuration: 180,
+    baseDuration: 30,
     permanent: false,
     biomeAffinity: [BiomeType.ATRIUM_MALL, BiomeType.STAIRWELL_INFINITE, BiomeType.CUBICLE_SEA],
     generateEffects: (severity) => [
@@ -125,7 +125,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Mimic',
     description: 'Everyday objects are not what they seem',
     baseSeverity: 0.4,
-    baseDuration: -1,
+    baseDuration: 90,
     permanent: true,
     biomeAffinity: [BiomeType.CUBICLE_SEA, BiomeType.ATRIUM_MALL, BiomeType.POOL_COMPLEX],
     generateEffects: (severity) => [
@@ -138,7 +138,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Hallucination',
     description: 'False walls conceal and deceive, sounds have no source',
     baseSeverity: 0.4,
-    baseDuration: 130,
+    baseDuration: 60,
     permanent: false,
     biomeAffinity: [BiomeType.STAIRWELL_INFINITE, BiomeType.POOL_COMPLEX, BiomeType.SUBMERGED_GARAGE],
     generateEffects: (severity) => [
@@ -151,7 +151,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Corrosion',
     description: 'Decay accelerates, structural damage creates hazard floors',
     baseSeverity: 0.5,
-    baseDuration: -1,
+    baseDuration: 75,
     permanent: true,
     biomeAffinity: [BiomeType.SUBMERGED_GARAGE, BiomeType.POOL_COMPLEX, BiomeType.STAIRWELL_INFINITE],
     generateEffects: (severity) => [
@@ -164,7 +164,7 @@ const ANOMALY_TEMPLATES: AnomalyTemplate[] = [
     name: 'Silence',
     description: 'Sound dampening field empowers entities and disorients the player',
     baseSeverity: 0.5,
-    baseDuration: 90,
+    baseDuration: 45,
     permanent: false,
     biomeAffinity: [BiomeType.SERVER_CATHEDRAL, BiomeType.STAIRWELL_INFINITE, BiomeType.CUBICLE_SEA],
     generateEffects: (severity) => [

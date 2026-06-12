@@ -26,6 +26,7 @@ export interface DifficultyParams {
   entitySpeedMultiplier: number;
   entityDetectionRange: number;
   hazardDamageMultiplier: number;
+  maxDepth: number;
 }
 
 const ALL_BIOMES: BiomeType[] = [
@@ -184,12 +185,13 @@ export class RunDirector extends EventEmitter {
   getDifficultyParams(depth?: number): DifficultyParams {
     const currentDepth = depth ?? this.stats.depth;
     return {
-      entityCountMultiplier: 1 + (currentDepth - 1) * 0.4,
+      entityCountMultiplier: 4 + (currentDepth - 1) * 2,
       anomalyFrequencyMultiplier: 1 + (currentDepth - 1) * 0.3,
       resourceScarcityMultiplier: Math.max(0.3, 1 - (currentDepth - 1) * 0.1),
       entitySpeedMultiplier: 1 + (currentDepth - 1) * 0.08,
-      entityDetectionRange: 10 + (currentDepth - 1) * 2,
+      entityDetectionRange: 12 + (currentDepth - 1) * 2,
       hazardDamageMultiplier: 1 + (currentDepth - 1) * 0.15,
+      maxDepth: this.config ? this.config.biomeSequence.length : 0,
     };
   }
 

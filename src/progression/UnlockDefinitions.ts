@@ -36,12 +36,12 @@ export const THRESHOLD_TIERS = [
 ];
 
 export const TOOL_BLUEPRINTS = [
-  { id: 'multitool', name: 'Multitool', description: 'A versatile tool for prying open panels, hacking terminals, and bypassing basic locks.', category: 'tool' as const, cost: 60, prerequisite: null },
-  { id: 'uv-light', name: 'UV Light', description: 'Reveals hidden markings, invisible pathways, and the residue of past Threshold breaches.', category: 'tool' as const, cost: 60, prerequisite: null },
+  { id: 'multitool', name: 'Multitool', description: 'A versatile tool for prying open panels, hacking terminals, and bypassing basic locks.', category: 'tool' as const, cost: 70, prerequisite: null },
+  { id: 'uv-light', name: 'UV Light', description: 'Reveals hidden markings, invisible pathways, and the residue of past Threshold breaches.', category: 'tool' as const, cost: 70, prerequisite: null },
   { id: 'anomaly-scanner', name: 'Anomaly Scanner', description: 'Detects spatial distortions and anomalous energy signatures before they fully manifest.', category: 'tool' as const, cost: 80, prerequisite: null },
-  { id: 'noise-maker', name: 'Noise Maker', description: 'Creates carefully tuned sound distractions to lure entities away from your path.', category: 'tool' as const, cost: 60, prerequisite: null },
-  { id: 'keycard-cloner', name: 'Keycard Cloner', description: 'Scans and replicates keycards, granting access to restricted areas without the original.', category: 'tool' as const, cost: 100, prerequisite: null },
-  { id: 'breather', name: 'Breather', description: 'Extended oxygen supply and environmental filtration for hazardous Threshold environments.', category: 'tool' as const, cost: 80, prerequisite: null },
+  { id: 'noise-maker', name: 'Noise Maker', description: 'Creates carefully tuned sound distractions to lure entities away from your path.', category: 'tool' as const, cost: 70, prerequisite: null },
+  { id: 'keycard-cloner', name: 'Keycard Cloner', description: 'Scans and replicates keycards, granting access to restricted areas without the original.', category: 'tool' as const, cost: 80, prerequisite: null },
+  { id: 'breather', name: 'Breather', description: 'Extended oxygen supply and environmental filtration for hazardous Threshold environments.', category: 'tool' as const, cost: 75, prerequisite: null },
 ];
 
 export const ARTIFACT_DEFINITIONS = [

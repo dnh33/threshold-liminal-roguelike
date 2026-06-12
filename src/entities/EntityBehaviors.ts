@@ -17,8 +17,9 @@ export class MiddleManager extends BaseEntity {
       hearingRange: 8,
       detectionSpeed: 0.4 + difficulty * 0.05,
     } satisfies EntityPerception;
-    this.speed = 2.5 + difficulty * 0.3;
-    this._attackDamage = 15;
+    this.speed = 3;
+    this._attackDamage = 10;
+    this._attackCooldown = 2;
   }
 
   protected createMesh(): THREE.Group {
@@ -116,8 +117,8 @@ export class Drowned extends BaseEntity {
       hearingRange: 25,
       detectionSpeed: 0.6 + difficulty * 0.05,
     } satisfies EntityPerception;
-    this.speed = 3 + difficulty * 0.4;
-    this._attackDamage = 20;
+    this.speed = 0;
+    this._attackDamage = 15;
   }
 
   protected createMesh(): THREE.Group {
@@ -420,10 +421,10 @@ export class Shopper extends BaseEntity {
       hearingRange: 10,
       detectionSpeed: 0.5 + difficulty * 0.05,
     } satisfies EntityPerception;
-    this._sneakSpeed = 1.5 + difficulty * 0.2;
-    this._chaseSpeed = 6 + difficulty * 0.3;
+    this._sneakSpeed = 1.5;
+    this._chaseSpeed = 6;
     this.speed = this._sneakSpeed;
-    this._attackDamage = 12;
+    this._attackDamage = 8;
   }
 
   protected createMesh(): THREE.Group {
@@ -603,7 +604,7 @@ export class Stairwalker extends BaseEntity {
       detectionSpeed: 1.0,
     } satisfies EntityPerception;
     this.speed = 0;
-    this._attackDamage = 30;
+    this._attackDamage = 50;
     this._currentFloor = Math.round(position.y / this._floorHeight);
     this._targetFloor = this._currentFloor;
   }
@@ -751,7 +752,7 @@ export class Reflection extends BaseEntity {
       detectionSpeed: 0,
     } satisfies EntityPerception;
     this.speed = 0;
-    this._attackDamage = 20 + difficulty * 2;
+    this._attackDamage = 25;
     this._mirrorOffset = new THREE.Vector3(
       (Math.random() - 0.5) * 3,
       0,

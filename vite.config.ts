@@ -9,7 +9,14 @@ export default defineConfig({
   build: {
     target: 'es2023',
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three'],
+        },
+      },
+    },
   },
   server: {
     port: 3000,

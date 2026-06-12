@@ -117,6 +117,13 @@ export class BaseEntity extends EventEmitter {
     if (this.awareness > 0 && this.state !== EntityState.CHASING && this.state !== EntityState.ATTACKING) {
       this.awareness = Math.max(0, this.awareness - dt * 0.15);
     }
+
+    if (this.state === EntityState.IDLE || this.state === EntityState.PATROLLING) {
+      const idleBob = Math.sin(performance.now() / 1000 * 2 + this.position.x) * 0.02;
+      if (this.mesh) {
+        this.mesh.position.y = this.position.y + idleBob;
+      }
+    }
   }
 
   protected updateState(dt: number, playerPos: THREE.Vector3): void {

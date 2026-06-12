@@ -2,6 +2,14 @@ import * as THREE from 'three';
 import { EventEmitter } from '../utils/EventEmitter';
 import type { Engine } from '../core/Engine';
 import { BiomeType, type BiomeDefinition, BIOME_DEFINITIONS } from '../biomes/BiomeTypes';
+import { OfficeBiome } from '../biomes/OfficeBiome';
+import { GarageBiome } from '../biomes/GarageBiome';
+import { ServerBiome } from '../biomes/ServerBiome';
+import { MallBiome } from '../biomes/MallBiome';
+import { StairwellBiome } from '../biomes/StairwellBiome';
+import { PoolBiome } from '../biomes/PoolBiome';
+import { RoomLayoutGenerator } from '../generation/RoomLayoutGenerator';
+import { PropPlacer, type PropDefinition } from '../generation/PropPlacer';
 
 export const TransitionType = {
   FADE: 'fade',
@@ -44,14 +52,16 @@ export class BiomeManager extends EventEmitter {
   private transitionOverlay: THREE.Mesh | null = null;
   private ambientLight: THREE.AmbientLight;
   private fogDummy: THREE.Fog;
+  private _generationSeed: number;
 
   private static readonly TRANSITION_DURATION_FADE = 1.5;
   private static readonly TRANSITION_DURATION_ELEVATOR = 3.0;
   private static readonly TRANSITION_DURATION_STAIRWELL = 4.0;
 
-  constructor(engine: Engine) {
+  constructor(engine: Engine, seed?: number) {
     super();
     this.engine = engine;
+    this._generationSeed = seed ?? Date.now();
 
     this.transitionState = {
       phase: TransitionPhase.IDLE,
@@ -106,61 +116,77 @@ export class BiomeManager extends EventEmitter {
     this.engine.sceneManager.scene.add(this.transitionOverlay);
   }
 
-  private createBiomeScene(definition: BiomeDefinition): BiomeInstance {
+  private createBiomeScene(definition: BiomeDefinition, seed?: number): BiomeInstance {
     const scene = new THREE.Scene();
     const { primary, secondary, accent, fog } = definition.colorPalette;
 
-    const color = new THREE.Color(primary);
-    scene.background = color;
+    scene.background = new THREE.Color(primary);
+    scene.fog = new THREE.Fog(new THREE.Color(fog), definition.fogSettings.near, definition.fogSettings.far);
 
-    const fogColor = new THREE.Color(fog);
-    scene.fog = new THREE.Fog(fogColor, definition.fogSettings.near, definition.fogSettings.far);
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(definition.ambientLight.color, definition.ambientLight.intensity);
+    scene.add(ambientLight);
 
-    const light = new THREE.AmbientLight(definition.ambientLight.color, definition.ambientLight.intensity);
-    scene.add(light);
+    // Generate room layout
+    const genSeed = seed ?? Date.now();
+    const layoutGen = new RoomLayoutGenerator(genSeed, definition.id);
+    const layout = layoutGen.generate(8, definition.landmarkCount.min);
 
-    const roomGroup = new THREE.Group();
-    roomGroup.name = 'room_container';
-    scene.add(roomGroup);
+    // Build biome-specific geometry
+    const biomeSceneGroup = this.buildBiomeGeometry(definition.id, definition);
+    scene.add(biomeSceneGroup);
 
-    for (let i = 0; i < 4; i++) {
-      const wallMat = new THREE.MeshStandardMaterial({
-        color: secondary,
-        roughness: 0.8,
-        metalness: 0.2,
-      });
-      const wall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat);
-      wall.position.set(0, 2, -5 + i * 3.5);
-      wall.castShadow = true;
-      wall.receiveShadow = true;
-      roomGroup.add(wall);
+    // Place props
+    const propPlacer = new PropPlacer(genSeed + 1);
+    const propDefs = propPlacer.populate(layout.rooms, definition.id);
+
+    // Create actual prop meshes and add to scene
+    for (const propDef of propDefs) {
+      const marker = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.1, 0.1),
+        new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0 })
+      );
+      marker.position.copy(propDef.position);
+      marker.position.y = 0.05;
+      scene.add(marker);
     }
 
+    // Create exit trigger at exit position
+    const exitTrigger = this.createExitTrigger(layout.exitPosition, accent);
+    scene.add(exitTrigger);
+
+    // Create a few tool pickup spots in landmark rooms
+    for (const landmarkPos of layout.landmarkPositions) {
+      const toolPickup = this.createToolPickup(landmarkPos, accent);
+      scene.add(toolPickup);
+    }
+
+    // Directional light
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    dirLight.position.set(5, 15, 5);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    // Floor plane (large, below everything)
     const floorMat = new THREE.MeshStandardMaterial({
       color: secondary,
       roughness: 0.9,
       metalness: 0.1,
+      side: THREE.DoubleSide,
     });
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMat);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(layout.width * 2, layout.depth * 2), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -0.1;
     floor.receiveShadow = true;
-    roomGroup.add(floor);
-
-    const ambientPoint = new THREE.PointLight(accent, 0.3, 15);
-    ambientPoint.position.set(0, 3, 0);
-    roomGroup.add(ambientPoint);
-
-    const topLight = new THREE.DirectionalLight(0xffffff, 0.2);
-    topLight.position.set(0, 10, 0);
-    roomGroup.add(topLight);
+    floor.userData.surfaceType = definition.id === 'submerged_garage' ? 'concrete' : 'carpet';
+    scene.add(floor);
 
     return {
       scene,
       definition,
       update: (_dt: number) => {
-        const t = this.engine.time.elapsedTime;
-        ambientPoint.intensity = 0.2 + Math.sin(t * 0.5) * 0.1;
+        const t = performance.now() / 1000;
+        ambientLight.intensity = definition.ambientLight.intensity * (0.9 + Math.sin(t * 0.3) * 0.1);
       },
       dispose: () => {
         scene.traverse((child) => {
@@ -177,13 +203,68 @@ export class BiomeManager extends EventEmitter {
     };
   }
 
+  private buildBiomeGeometry(biomeType: BiomeType, definition: BiomeDefinition): THREE.Group {
+    switch (biomeType) {
+      case BiomeType.CUBICLE_SEA:
+        return new OfficeBiome(definition).build();
+      case BiomeType.SUBMERGED_GARAGE:
+        return new GarageBiome(definition).build();
+      case BiomeType.SERVER_CATHEDRAL:
+        return new ServerBiome(definition).build();
+      case BiomeType.ATRIUM_MALL:
+        return new MallBiome(definition).build();
+      case BiomeType.STAIRWELL_INFINITE:
+        return new StairwellBiome(definition).build();
+      case BiomeType.POOL_COMPLEX:
+        return new PoolBiome(definition).build();
+      default:
+        return new THREE.Group();
+    }
+  }
+
+  private createExitTrigger(position: THREE.Vector3, color: number): THREE.Mesh {
+    const geom = new THREE.BoxGeometry(2, 3, 0.5);
+    const mat = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: color,
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.copy(position);
+    mesh.position.y = 1.5;
+    mesh.userData.interactable = true;
+    mesh.userData.label = 'Exit Door (E)';
+    mesh.userData.isExit = true;
+    return mesh;
+  }
+
+  private createToolPickup(position: THREE.Vector3, color: number): THREE.Mesh {
+    const geom = new THREE.OctahedronGeometry(0.3);
+    const mat = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: color,
+      emissiveIntensity: 0.8,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.copy(position);
+    mesh.position.y = 1;
+    mesh.userData.interactable = true;
+    mesh.userData.label = 'Tool (E)';
+    mesh.userData.isToolPickup = true;
+    return mesh;
+  }
+
   getDefinition(biomeType: BiomeType): BiomeDefinition {
     return BIOME_DEFINITIONS[biomeType];
   }
 
-  async loadBiome(biomeType: BiomeType): Promise<BiomeInstance> {
+  async loadBiome(biomeType: BiomeType, seed?: number): Promise<BiomeInstance> {
     const definition = this.getDefinition(biomeType);
-    return this.createBiomeScene(definition);
+    return this.createBiomeScene(definition, seed);
   }
 
   async transitionTo(biomeType: BiomeType, transitionType?: TransitionType): Promise<void> {
@@ -223,7 +304,7 @@ export class BiomeManager extends EventEmitter {
     if (this.transitionState.fromBiome === BiomeType.STAIRWELL_INFINITE) {
       return TransitionType.STAIRWELL;
     }
-    const r = Math.random();
+    const r = (Math.sin(this._generationSeed + 42) * 0.5 + 0.5) % 1;
     if (r < 0.4) return TransitionType.FADE;
     if (r < 0.7) return TransitionType.ELEVATOR;
     return TransitionType.STAIRWELL;

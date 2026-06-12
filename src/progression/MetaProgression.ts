@@ -285,8 +285,8 @@ export class MetaProgression extends EventEmitter {
     this.checkAchievements();
   }
 
-  processRunResult(stats: RunStats): void {
-    this.recordRun('descend', {
+  processRunResult(stats: RunStats & { result?: 'extract' | 'death' | 'descend' }): void {
+    this.recordRun(stats.result ?? 'descend', {
       time: stats.time,
       biomesCleared: stats.biomesCleared,
       anomaliesEncountered: stats.anomaliesEncountered,

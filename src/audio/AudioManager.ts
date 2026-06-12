@@ -894,6 +894,13 @@ export class AudioManager extends EventEmitter {
     return this._paused;
   }
 
+  onFirstInteraction(): void {
+    this.resume();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
   startRun(): void {
     this.resume();
     this.emit('run_started');
@@ -907,6 +914,10 @@ export class AudioManager extends EventEmitter {
   onAnomalyStarted(anomaly: AnomalyType): void {
     this.playAnomalyAlert();
     this.emit('anomaly_started', { anomaly });
+  }
+
+  onEntityDetected(): void {
+    this.playEntityDetected();
   }
 
   endRun(result: string): void {
