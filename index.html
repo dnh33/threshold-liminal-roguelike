@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="THRESHOLD - A biome-diverse liminal spaces roguelike. First-person descent through distinct institutional uncanny zones." />
+    <title>THRESHOLD — A Liminal Space Roguelike</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, -apple-system, sans-serif; }
+      #game-canvas { display: block; width: 100%; height: 100%; }
+      #ui-root { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+      #ui-root > * { pointer-events: auto; }
+      #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; color: #fff; }
+      #loading-screen h1 { font-size: 2rem; letter-spacing: 0.3em; font-weight: 300; color: #ffffff88; }
+      #loading-screen .loader { width: 40px; height: 40px; border: 2px solid #ffffff22; border-top-color: #ffffff88; border-radius: 50%; animation: spin 1s linear infinite; margin-top: 2rem; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #loading-screen .loader { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <div id="loading-screen">
+      <h1>THRESHOLD</h1>
+      <div class="loader"></div>
+    </div>
+    <canvas id="game-canvas"></canvas>
+    <div id="ui-root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
